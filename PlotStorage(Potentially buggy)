@@ -24,10 +24,17 @@ end
 local PlotStorage = {}
 
 function PlotStorage.Load(player: Player)
-	
-	playersRemaining.Value += 1
-end
+playersRemaining.Value += 1
 
+local success,  data = pcall(function()
+ return PlotStore:GetAsync(player.UserId)
+end)
+if not success then
+ warn("Plot data failed to load")
+ playersRemaing.Value -= 1
+ return
+end
+ plot = PlotManager.S
 function PlotStorage.Save(player: Player)
 	local success, data = pcall(function()
 		return PlotStore:GetAsync(player.UserId)
@@ -42,13 +49,13 @@ function PlotStorage.Save(player: Player)
 	local success, data: {ObjectInfo} = pcall(function()         
 		return PlotStore:GetAsync(player.UserId)
 	end)
-	
+    
 	if not success then
 		warn(data)
-		playersRemaining.Value += 1
+		playersRemaining.Value -= 1
 		return
 	end
-	
+
 	if not Players:GetPlayerByUserId(player.UserId) then
 		return
 	end
