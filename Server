@@ -1,0 +1,16 @@
+--objects replicated to workspace and vice versa
+local objectToMove = ReplicatedStorage:WaitForChild("ModelsFinal")
+objectToMove.Parent = Workspace
+local editorOnly = Workspace:WaitForChild("InEditor")
+editorOnly.Parent = ReplicatedStorage
+local TryPlace = ReplicatedStorage.TryPlace
+
+--Plot stuff
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PlotManager = require(script.Parent.PlotManager)
+local GetPlot = ReplicatedStorage.GetPlot
+
+Players.PlayerAdded:Connect(PlotManager.SpawnPlot)
+GetPlot.OnServerInvoke = PlotManager.GetPlot
+TryPlace.OnServerInvoke = PlotManager.Place
