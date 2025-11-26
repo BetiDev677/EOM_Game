@@ -1,0 +1,25 @@
+local playersRemaining = Instance.new("NumberValue")
+type ObjectInfo = {
+Name:string,
+Cf: {number},
+}
+local function serializePlot(plot:Model)
+ local data = {}
+  for _, object in plot.Objects:GetChildren() do
+   local objectCf = plot.GetPivot():ToObjectSpace(object.GetPivot())
+   local Info: ObjectInfo {
+   }
+  end
+end
+
+local PlotStorage = {
+
+}
+function PlotStorage.Load(player:Player)
+ playersRemaining.Value +=1
+end
+function PlotStorage.Save(player:Player)
+ playersRemaining -= 1
+end
+
+return PlotStorage
