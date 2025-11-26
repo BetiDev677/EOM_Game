@@ -1,0 +1,53 @@
+PlacementValidator = {}
+
+-- Checks if the object's bounding box corners are inside the plot's base part bounds
+function PlacementValidator.WithinBounds(plot, objectSize, worldCF)
+	local base = plot:FindFirstChild("Base")
+	if not base then return false end
+
+	local basePos, baseSize = base.Position, base.Size
+	local halfBaseX, halfBaseZ = baseSize.X / 2, baseSize.Z / 2
+	
+	local corners = {}
+	for _, x in ipairs({-1, 1}) do
+		for _, z in ipairs({-1, 1}) do
+			local offset = Vector3.new(x * objectSize.X / 2, 0, z * objectSize.Z / 2)
+			table.insert(corners, (worldCF * CFrame.new(offset)).Position)
+		end
+	end
+
+	for _, corner in ipairs(corners) do
+		if math.abs(corner.X - basePos.X) > halfBaseX or math.abs(corner.Z - basePos.Z) > halfBaseZ then
+			return false
+		end
+	end
+
+	return true
+end
+
+function PlacementValidator.NotIntersectingObjects(plot, objectSize, worldCF)
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+
+	local objectsFolder = plot:FindFirstChild("Objects")
+	if not objectsFolder then return true end 
+
+	local filterParts = {}
+	for _, part in ipairs(objectsFolder:GetDescendants()) do
+		if part:IsA("BasePart") then
+			table.insert(filterParts, part)
+		end
+	end
+	params.FilterDescendantsInstances = filterParts
+
+	local parts = workspace:GetPartBoundsInBox(worldCF, objectSize, params)
+	if #parts > 0  then 
+		return false 
+	else 
+		return true
+	end
+end
+
+return PlacementValidator
+
+
