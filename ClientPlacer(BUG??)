@@ -1,0 +1,99 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local hutOutlineTemplate = ReplicatedStorage.HutOutline
+local Workspace = game:GetService("Workspace") -- Fixed: Corrected getService to GetService
+local PlaceableObjects = ReplicatedStorage:WaitForChild("PlaceableObjects")
+local ClientPlacer = {}
+local UserInputService = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
+local camera = Workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local tryPlace = ReplicatedStorage:WaitForChild("TryPlace")
+local PREVIEW_RENDER = "RenderPreview"
+local PLACE_ACTION = "Place"
+local PlacementValidator = require(ReplicatedStorage.PlacementValidator)
+
+local function castMouse()
+	local mouseLocation = UserInputService:GetMouseLocation()
+	local ray = camera:ViewportPointToRay(mouseLocation.X, mouseLocation.Y)
+	return Workspace:Raycast(ray.Origin, ray.Direction * 1000)
+end
+
+ClientPlacer.__index = ClientPlacer
+
+function ClientPlacer.new(plot: Model)
+	local self = setmetatable({
+		Plot = plot,
+		Preview = nil
+	}, ClientPlacer)
+
+	self:InitiateRenderPreview() -- Fixed: Added self: to call the method correctly
+	
+	ContextActionService:BindAction(PLACE_ACTION, function(...) self:TryPlaceBlock(...) end, false, Enum.UserInputType.MouseButton1)
+	return self
+end
+
+function ClientPlacer:InitiateRenderPreview()
+	self:PreparePreviewModel(PlaceableObjects.Hut) -- Fixed: Correctly calling the method
+	RunService:BindToRenderStep(PREVIEW_RENDER, Enum.RenderPriority.Camera.Value, function(...) self:RenderPreview(...) end)
+end
+
+function ClientPlacer:PreparePreviewModel(model: Model)
+	if self.Preview then
+		self.Preview:Destroy()
+	end
+
+	self.Preview = model:Clone()
+	local HutOutline = hutOutlineTemplate:Clone()
+	HutOutline.Adornee = self.Preview
+	HutOutline.Parent = self.Preview
+
+	for _, part in self.Preview:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.CanCollide = false
+			part.CanQuery = false
+			part.Transparency = 0
+		end
+	end
+
+	self.Preview.Parent = Workspace
+end
+
+function ClientPlacer:RenderPreview()
+	local result = castMouse() 
+	if result and result.Position then -- Fixed: Removed redundant cast
+		local cf = CFrame.new(result.Position)
+		self.Preview:PivotTo(cf)
+		local canPlace = true
+		local size = self.Preview:GetExtentsSize()
+		if not PlacementValidator.WithinBounds(self.Plot, size, cf) then
+			local canPlace = false
+		end
+		if not PlacementValidator.NotIntersectingObjects(self.Plot, size, cf) then
+			local canPlace = false
+		end
+		self.Preview.HutOutline.Color3 = 
+			if canPlace 
+			then Color3.new(0, 0.666667, 1) 
+			else Color3.new(1, 0, 0)
+		
+	end
+end
+
+function ClientPlacer:TryPlaceBlock(_,state,_)
+	if state ~= Enum.UserInputState.Begin then
+		return
+	end
+	
+	local success = tryPlace:InvokeServer(self.Preview.Name, self.Preview:GetPivot())
+end
+
+function ClientPlacer:Destroy()  
+	if self.Preview then
+		self.Preview:Destroy()
+	end
+	RunService:UnbindFromRenderStep(PREVIEW_RENDER)
+	ContextActionService:UnbindAction(PLACE_ACTION)
+end
+
+return ClientPlacer
+
