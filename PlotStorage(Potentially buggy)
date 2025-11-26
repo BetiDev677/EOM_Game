@@ -11,7 +11,7 @@ type ObjectInfo = {
 }
 local function serializePlot(plot: Model)
 	local data = {}
-	for _, object in plot.Objects:GetChildren() do
+	for _, object in Plot.Objects:GetChildren() do
 		local objectCF = plot:GetPivot():ToObjectSpace(object:GetPivot())
 		local info: ObjectInfo = {
 			Name = object.Name,
