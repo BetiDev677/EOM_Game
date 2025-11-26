@@ -7,6 +7,7 @@ function PlacementValidator.WithinBounds(plot, objectSize, worldCF)
 
 	local basePos, baseSize = base.Position, base.Size
 	local halfBaseX, halfBaseZ = baseSize.X / 2, baseSize.Z / 2
+	local WithinBounds = true
 	
 	local corners = {}
 	for _, x in ipairs({-1, 1}) do
@@ -18,23 +19,25 @@ function PlacementValidator.WithinBounds(plot, objectSize, worldCF)
 
 	for _, corner in ipairs(corners) do
 		if math.abs(corner.X - basePos.X) > halfBaseX or math.abs(corner.Z - basePos.Z) > halfBaseZ then
-			return false
+			WithinBounds = false
 		end
 	end
+	
+	return WithinBounds
 
-	return true
 end
 
 function PlacementValidator.NotIntersectingObjects(plot, objectSize, worldCF)
 	local params = OverlapParams.new()
 	params.FilterType = Enum.RaycastFilterType.Include
+	local NoIntersection = true
 
 	local objectsFolder = plot:FindFirstChild("Objects")
 	if not objectsFolder then return true end 
 
 	local filterParts = {}
 	for _, part in ipairs(objectsFolder:GetDescendants()) do
-		if part:IsA("BasePart") then
+		if part then
 			table.insert(filterParts, part)
 		end
 	end
@@ -42,12 +45,10 @@ function PlacementValidator.NotIntersectingObjects(plot, objectSize, worldCF)
 
 	local parts = workspace:GetPartBoundsInBox(worldCF, objectSize, params)
 	if #parts > 0  then 
-		return false 
-	else 
-		return true
+		print("berti intersection")
+		NoIntersection = false 
 	end
+	return NoIntersection
 end
 
 return PlacementValidator
-
-
