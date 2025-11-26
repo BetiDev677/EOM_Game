@@ -12,14 +12,22 @@ function PlotManager.SpawnPlot (player : Player) : Model
 	return plot
 end
 
-function PlotManager.Place(player: Player, name: string, targetCF:CFrame )
+function PlotManager.Place(player: Player, name: string, targetCF:CFrame)
 	local object = PlaceableObjects:FindFirstChild(name)
 	local plot = plots[player.UserId]
 	
 	if not object or not plot then
 		return false
 	end
-	local newObject = object: Clone()
+	local objectSize = object:GetExtentsSize()
+	if not PlacementValidator.WithinBounds(plot, objectSize, targetCF) or not	
+	 PlacementValidator.NotIntersectingObjects(plot, objectSize, targetCF)
+	then
+		
+	    return false
+	end
+
+	local newObject = object:Clone()
 	newObject:PivotTo(targetCF)
 	newObject.Parent = plot.Objects
 	return true
