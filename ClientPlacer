@@ -63,18 +63,19 @@ function ClientPlacer:RenderPreview()
 	if result and result.Position then -- Fixed: Removed redundant cast
 		local cf = CFrame.new(result.Position)
 		self.Preview:PivotTo(cf)
-		local canPlace = true
+		 self.HutOutliner = self.Preview:FindFirstChild("HutOutline")
+		
 		local size = self.Preview:GetExtentsSize()
-		if not PlacementValidator.WithinBounds(self.Plot, size, cf) then
-			local canPlace = false
+		if not PlacementValidator.WithinBounds(self.Plot, size, cf) or not PlacementValidator.NotIntersectingObjects(self.Plot, size, cf) then
+			print("bad placing")
+			if self.HutOutliner then self.HutOutliner.Color3 = Color3.new(1, 0, 0) end
+		else
+			print("good placing")
+				if self.HutOutliner then self.HutOutliner.Color3 = Color3.new(0, 0.666667, 1) end
 		end
-		if not PlacementValidator.NotIntersectingObjects(self.Plot, size, cf) then
-			local canPlace = false
-		end
-		self.Preview.HutOutline.Color3 = 
-			if canPlace 
-			then Color3.new(0, 0.666667, 1) 
-			else Color3.new(1, 0, 0)
+	
+		  
+		
 		
 	end
 end
