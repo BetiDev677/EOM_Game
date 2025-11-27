@@ -13,13 +13,13 @@ local function serializePlot(plot:Model)
  local data = {}
   for _, object in plot.Objects:GetChildren() do
    local objectCf = plot.GetPivot():ToObjectSpace(object.GetPivot())
-   local Info: ObjectInfo {
+   local info: ObjectInfo = {
     Name = object.Name,
     Cf = table.pack(objectCF:GetComponents())
    }
   table.insert(data, info)
-  return data
   end
+  return data
 end
 
 local PlotStorage = {
