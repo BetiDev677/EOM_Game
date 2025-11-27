@@ -27,7 +27,7 @@ local PlotStorage = {
 }
 function PlotStorage.Load(player:Player)
  local success, data: {ObjectInfo} = pcall(function()
-  return PlotStore:GetAsync(player.UserID)
+  return PlotStore:UpdaeAsync(player.UserID)
  end)
 
  if not success then
@@ -43,7 +43,7 @@ function PlotStorage.Load(player:Player)
  local plot = PlotManager.SpawnPlot(player)
  if data then
   for _, objectInfo in data do
-   local object = placeableObjects[objectsInfo.Name]:Clone()
+   local object = placeableObjects[objectInfo.Name]:Clone()
    local relativeCf = CFrame.new(table.unpack(objectInfo.Cf))
    object:PivotTo(plot:GetPivot():ToWorldSpace(relativeCf))
    object.Parent = plot.Objects
