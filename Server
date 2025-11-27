@@ -4,9 +4,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PlotManager = require(script.Parent.PlotManager)
 local PlotStorage = require(script.Parent.PlotStorage)
 local GetPlot = ReplicatedStorage.GetPlot
+local TryPlace = ReplicatedStorage.TryPlace
 
-Players.PlayerAdded:Connect(PlotManager.SpawnPlot)
-GetPlot.OnServerInvoke = PlotManager.GetPlot
+
+Players.PlayerAdded:Connect(PlotStorage.Load)
+Players.Removed:Connect(PlotStorage.Save)
 game:BindToClose(PlotStorage.WaitForSave)
 
 GetPlot.OnServerInvoke = PlotManager.GetPlot 
