@@ -34,27 +34,24 @@ if not success then
  playersRemaing.Value -= 1
  return
 end
- plot = PlotManager.S
+local plot = PlotManager.SpawnPlot(player)
+if data then
+        for _, objectInfo in data do
+            local template = placeableObjects:FindFirstChild(objectInfo.Name)
+            if template then
+                local object = template:Clone()
+                local relativeCf = CFrame.new(table.unpack(objectInfo.Cf))
+                object:PivotTo(plot:GetPivot():ToWorldSpace(relativeCf))
+                object.Parent = plot.Objects
+            else
+                warn("Missing template for object:", objectInfo.Name)
+            end
+        end
+    end
+end
+
 function PlotStorage.Save(player: Player)
-	local success, data = pcall(function()
-		return PlotStore:GetAsync(player.UserId)
-	end)
-	
 	local plot = PlotManager.GetPlot(player)
-	if not plot or not plot:IsDescendantOf(workspace) then
-		playersRemaining.Value -= 1
-		return
-	end
-	
-	local success, data: {ObjectInfo} = pcall(function()         
-		return PlotStore:GetAsync(player.UserId)
-	end)
-    
-	if not success then
-		warn(data)
-		playersRemaining.Value -= 1
-		return
-	end
 
 	if not Players:GetPlayerByUserId(player.UserId) then
 		return
