@@ -1,4 +1,10 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local playersRemaining = Instance.new("NumberValue")
+local PlotManager = require(script.Parent.PlotManager)
+local DataStoreService = game:GetService("DataStoreService")
+local PlotStore =  DataStoreService:GetDataStore("PlotStore")
+local Players = game:GetService("Players")
+local placeableObjects = ReplicatedStorage.PlaceableObjects
 type ObjectInfo = {
 Name:string,
 Cf: {number},
@@ -9,8 +15,10 @@ local function serializePlot(plot:Model)
    local objectCf = plot.GetPivot():ToObjectSpace(object.GetPivot())
    local Info: ObjectInfo {
     Name = object.Name,
-    Cf = 
+    Cf = table.pack(objectCF:GetComponents())
    }
+  table.insert(data, info)
+  return data
   end
 end
 
@@ -18,10 +26,55 @@ local PlotStorage = {
 
 }
 function PlotStorage.Load(player:Player)
+ local success, data: {ObjectInfo} = pcall(function()
+  return PlotStore:GetAsync(player.UserID)
+ end)
+
+ if not success then
+  warn data
+  playersRemaining.Value += 1
+  return
+ end
+
+ if not Players.GetPlayerByUserId(player.UserId) then
+  return
+ end
+
+ local plot = PlotManager.SpawnPlot(player)
+ if data then
+  for _, objectInfo in data do
+   local object = placeableObjects[objectsInfo.Name]:Clone()
+   local relativeCf = CFrame.new(table.unpack(objectInfo.Cf))
+   object:PivotTo(plot:GetPivot():ToWorldSpace(relativeCf))
+   object.Parent = plot.Objects
+  end
+ end 
+
  playersRemaining.Value +=1
 end
 function PlotStorage.Save(player:Player)
- playersRemaining -= 1
+ local plot = PlotManager.GetPlot(player)
+ if not plot or not plot:IsADescendantOf(workspace) then
+  playersRemaining.Value -= 1 
+  return
+ end
+ local data = serializePlot(plot)
+ plot:Destroy()
+
+ local success, errMsg = pcall(function()
+  PlotStore:UpdateAsync(player.UserID, data)
+ end)
+
+  if not success then
+    warn(errMsg)
+  end
+
+  playersRemaining.Value -= 1
+end
+function PlotStorage.WaitForSave()
+ while playersRemaining.Value > 0 do
+  playersRemaining.Changed:Wait()
+ end
 end
 
 return PlotStorage
