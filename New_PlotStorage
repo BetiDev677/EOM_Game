@@ -8,6 +8,8 @@ local function serializePlot(plot:Model)
   for _, object in plot.Objects:GetChildren() do
    local objectCf = plot.GetPivot():ToObjectSpace(object.GetPivot())
    local Info: ObjectInfo {
+    Name = object.Name,
+    Cf = 
    }
   end
 end
