@@ -67,7 +67,7 @@ function PlotStorage.Save(player:Player)
 	if success then
 		plot:Destroy()
   else
-   warn(data)
+   warn(errMsg)
 	end
 
 	playersRemaining.Value -= 1
