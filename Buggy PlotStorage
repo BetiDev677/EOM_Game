@@ -15,7 +15,7 @@ local function serializePlot(plot:Model)
 		local objectCf = plot.GetPivot():ToObjectSpace(object.GetPivot())
 		local info: ObjectInfo = {
 			Name = object.Name,
-			Cf = table.pack(objectCF:GetComponents())
+			Cf = table.pack(objectCf:GetComponents())
 		}
 		table.insert(data, info)
 	end
@@ -59,14 +59,15 @@ function PlotStorage.Save(player:Player)
 		return
 	end
 	local data = serializePlot(plot)
-	plot:Destroy()
 
 	local success, errMsg = pcall(function()
 		PlotStore:SetAsync(player.UserId, data)
 	end)
 
-	if not success then
-		warn(errMsg)
+	if success then
+		plot:Destroy()
+  else
+   warn(data)
 	end
 
 	playersRemaining.Value -= 1
