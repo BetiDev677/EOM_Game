@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PlaceableObjects = ReplicatedStorage.PlaceableObjects
 local ContextActionService = game:GetService("ContextActionService")
 local plotTemplate  = game:GetService("ServerStorage").Plot
+local PlacementValidator = require(ReplicatedStorage.PlacementValidator)
 local PlotManager = {}
 local plots : {Model} = {}
 function PlotManager.SpawnPlot (player : Player) : Model
@@ -12,19 +13,20 @@ function PlotManager.SpawnPlot (player : Player) : Model
 	return plot
 end
 
+
 function PlotManager.Place(player: Player, name: string, targetCF:CFrame)
 	local object = PlaceableObjects:FindFirstChild(name)
 	local plot = plots[player.UserId]
-	
+
 	if not object or not plot then
 		return false
 	end
 	local objectSize = object:GetExtentsSize()
 	if not PlacementValidator.WithinBounds(plot, objectSize, targetCF) or not	
-	 PlacementValidator.NotIntersectingObjects(plot, objectSize, targetCF)
+		PlacementValidator.NotIntersectingObjects(plot, objectSize, targetCF)
 	then
-		
-	    return false
+
+		return false
 	end
 
 	local newObject = object:Clone()
@@ -32,9 +34,25 @@ function PlotManager.Place(player: Player, name: string, targetCF:CFrame)
 	newObject.Parent = plot.Objects
 	return true
 end
+
+function PlotManager.Delete(player: Player, object: Part): boolean
+	local plot =  plots[player.UserId]
+	if not plot or not object or not object:IsDescendantOf(plot.Objects) then
+		return false 
+	end
+	local actualObject = object
+	while actualObject.Parent ~=plot.Objects do
+		actualObject = actualObject:FindFirstAncestorWhichIsA("Model")
+	end
+	actualObject:Destroy()
+	return true 
+end
+
 function PlotManager.GetPlot(player: Player) : Model
 	return plots[player.UserId]
 end
+
+
 
 return PlotManager
 
