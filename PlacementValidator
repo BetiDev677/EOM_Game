@@ -45,10 +45,11 @@ function PlacementValidator.NotIntersectingObjects(plot, objectSize, worldCF)
 
 	local parts = workspace:GetPartBoundsInBox(worldCF, objectSize, params)
 	if #parts > 0  then 
-		print("berti intersection")
 		NoIntersection = false 
 	end
 	return NoIntersection
 end
 
 return PlacementValidator
+
+
