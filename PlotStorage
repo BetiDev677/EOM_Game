@@ -6,75 +6,77 @@ local PlotStore =  DataStoreService:GetDataStore("PlotStore")
 local Players = game:GetService("Players")
 local placeableObjects = ReplicatedStorage.PlaceableObjects
 type ObjectInfo = {
-Name:string,
-Cf: {number},
+	Name:string,
+	Cf: {number},
 }
 local function serializePlot(plot:Model)
- local data = {}
-  for _, object in plot.Objects:GetChildren() do
-   local objectCf = plot.GetPivot():ToObjectSpace(object.GetPivot())
-   local info: ObjectInfo = {
-    Name = object.Name,
-    Cf = table.pack(objectCF:GetComponents())
-   }
-  table.insert(data, info)
-  end
-  return data
+	local data = {}
+	for _, object in plot.Objects:GetChildren() do
+		local objectCf = plot:GetPivot():ToObjectSpace(object:GetPivot())
+		local info: ObjectInfo = {
+			Name = object.Name,
+			Cf = table.pack(objectCf:GetComponents())
+		}
+		table.insert(data, info)
+	end
+	return data
 end
 
 local PlotStorage = {
 
 }
 function PlotStorage.Load(player:Player)
- local success, data: {ObjectInfo} = pcall(function()
-  return PlotStore:UpdaeAsync(player.UserID)
- end)
+	local success, data: {ObjectInfo} = pcall(function()
+		return PlotStore:GetAsync(player.UserId)
+	end)
 
- if not success then
-  warn data
-  playersRemaining.Value += 1
-  return
- end
+	if not success then
+		warn(data)
+		playersRemaining.Value += 1
+		return
+	end
 
- if not Players.GetPlayerByUserId(player.UserId) then
-  return
- end
+	if not Players:GetPlayerByUserId(player.UserId) then
+		return
+	end
 
- local plot = PlotManager.SpawnPlot(player)
- if data then
-  for _, objectInfo in data do
-   local object = placeableObjects[objectInfo.Name]:Clone()
-   local relativeCf = CFrame.new(table.unpack(objectInfo.Cf))
-   object:PivotTo(plot:GetPivot():ToWorldSpace(relativeCf))
-   object.Parent = plot.Objects
-  end
- end 
+	local plot = PlotManager.SpawnPlot(player)
+	if data then
+		for _, objectInfo in data do
+			local object = placeableObjects[objectInfo.Name]:Clone()
+			local relativeCf = CFrame.new(table.unpack(objectInfo.Cf))
+			object:PivotTo(plot:GetPivot():ToWorldSpace(relativeCf))
+			object.Parent = plot.Objects
+		end
+	end 
 
- playersRemaining.Value +=1
+	playersRemaining.Value +=1
 end
 function PlotStorage.Save(player:Player)
- local plot = PlotManager.GetPlot(player)
- if not plot or not plot:IsADescendantOf(workspace) then
-  playersRemaining.Value -= 1 
-  return
- end
- local data = serializePlot(plot)
- plot:Destroy()
+	local plot = PlotManager.GetPlot(player)
+	if not plot or not (plot:IsA("Model") and plot.Parent) then
+		playersRemaining.Value -= 1
+		return
+	end
+	local data = serializePlot(plot)
 
- local success, errMsg = pcall(function()
-  PlotStore:UpdateAsync(player.UserID, data)
- end)
+	local success, errMsg = pcall(function()
+		PlotStore:SetAsync(player.UserId, data)
+	end)
 
-  if not success then
-    warn(errMsg)
-  end
+	if success then
+		print("Data Saved successfully!")
+		plot:Destroy()
+	else
+		warn(errMsg)
+	end
 
-  playersRemaining.Value -= 1
+	playersRemaining.Value -= 1
 end
 function PlotStorage.WaitForSave()
- while playersRemaining.Value > 0 do
-  playersRemaining.Changed:Wait()
- end
+	while playersRemaining.Value > 0 do
+		playersRemaining.Changed:Wait()
+	end
 end
 
 return PlotStorage
