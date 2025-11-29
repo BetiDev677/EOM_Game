@@ -1,15 +1,19 @@
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local PlotManager = require(script.Parent.PlotManager)
 local PlotStorage = require(script.Parent.PlotStorage)
-local GetPlot = ReplicatedStorage.GetPlot
-local TryPlace = ReplicatedStorage.TryPlace
-
+local GetPlot = ReplicatedStorage:WaitForChild("GetPlot") 
+local TryPlace = ReplicatedStorage:WaitForChild("TryPlace")
+local TryDelete = ReplicatedStorage.TryDelete
 
 Players.PlayerAdded:Connect(PlotStorage.Load)
-Players.Removed:Connect(PlotStorage.Save)
-game:BindToClose(PlotStorage.WaitForSave)
-
+Players.PlayerRemoving:Connect(PlotStorage.Save)
+if not RunService:IsStudio() then 
+	game:BindToClose(PlotStorage.WaitForSave)
+end
 GetPlot.OnServerInvoke = PlotManager.GetPlot 
 TryPlace.OnServerInvoke = PlotManager.Place
+TryDelete.OnServerInvoke = PlotManager.Delete
+
+print("✅ Plot System Initialized and Data Hooks Established.")
