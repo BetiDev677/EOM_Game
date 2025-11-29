@@ -8,8 +8,12 @@ local ContextActionService = game:GetService("ContextActionService")
 local camera = Workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 local tryPlace = ReplicatedStorage:WaitForChild("TryPlace")
+local tryDelete = ReplicatedStorage:WaitForChild("TryDelete")
 local PREVIEW_RENDER = "RenderPreview"
 local PLACE_ACTION = "Place"
+local ROTATE_ACTION = "Rotate"
+local DELETE_ACTION = "Delete"
+local CYCLE_ACTION = "Cycle"
 local PlacementValidator = require(ReplicatedStorage.PlacementValidator)
 
 local function castMouse()
@@ -23,17 +27,22 @@ ClientPlacer.__index = ClientPlacer
 function ClientPlacer.new(plot: Model)
 	local self = setmetatable({
 		Plot = plot,
-		Preview = nil
+		Preview = nil,
+		Rotation = 0,
+		PreviewIndex = 1
 	}, ClientPlacer)
 
 	self:InitiateRenderPreview() -- Fixed: Added self: to call the method correctly
 	
 	ContextActionService:BindAction(PLACE_ACTION, function(...) self:TryPlaceBlock(...) end, false, Enum.UserInputType.MouseButton1)
+	ContextActionService:BindAction(ROTATE_ACTION, function(...) self:RotateBlock(...)end, false, Enum.KeyCode.R)
+	ContextActionService:BindAction(DELETE_ACTION, function(...) self:TryDeleteBlock(...) end, false, Enum.KeyCode.X)
+	ContextActionService:BindAction(CYCLE_ACTION, function(...) self:CycleObject(...)end, false, Enum.KeyCode.E)
 	return self
 end
 
 function ClientPlacer:InitiateRenderPreview()
-	self:PreparePreviewModel(PlaceableObjects.Hut) -- Fixed: Correctly calling the method
+	self:PreparePreviewModel(PlaceableObjects:GetChildren()[self.PreviewIndex]) -- Fixed: Correctly calling the method
 	RunService:BindToRenderStep(PREVIEW_RENDER, Enum.RenderPriority.Camera.Value, function(...) self:RenderPreview(...) end)
 end
 
@@ -61,22 +70,15 @@ end
 function ClientPlacer:RenderPreview()
 	local result = castMouse() 
 	if result and result.Position then -- Fixed: Removed redundant cast
-		local cf = CFrame.new(result.Position)
+		local cf = CFrame.new(result.Position) * CFrame.Angles(0, self.Rotation, 0)
 		self.Preview:PivotTo(cf)
 		 self.HutOutliner = self.Preview:FindFirstChild("HutOutline")
-		
 		local size = self.Preview:GetExtentsSize()
 		if not PlacementValidator.WithinBounds(self.Plot, size, cf) or not PlacementValidator.NotIntersectingObjects(self.Plot, size, cf) then
-			print("bad placing")
 			if self.HutOutliner then self.HutOutliner.Color3 = Color3.new(1, 0, 0) end
 		else
-			print("good placing")
-				if self.HutOutliner then self.HutOutliner.Color3 = Color3.new(0, 0.666667, 1) end
+			if self.HutOutliner then self.HutOutliner.Color3 = Color3.new(0, 0.666667, 1) end
 		end
-	
-		  
-		
-		
 	end
 end
 
@@ -88,12 +90,39 @@ function ClientPlacer:TryPlaceBlock(_,state,_)
 	local success = tryPlace:InvokeServer(self.Preview.Name, self.Preview:GetPivot())
 end
 
+function ClientPlacer:RotateBlock(_, state, _)
+	if state == Enum.UserInputState.Begin then
+		self.Rotation += math.pi/2 --90 degrees
+	end
+end
+
+function ClientPlacer:TryDeleteBlock(_, state, _)
+	if state ~= Enum.UserInputState.Begin then
+		local cast = castMouse()
+		if cast and cast.Instance then
+			local success = tryDelete:InvokeServer(cast.Instance)
+		end
+	end
+end
+
+function ClientPlacer:CycleObject(_, state, _)
+	if state == Enum.UserInputState.Begin then
+		local objects = PlaceableObjects:GetChildren()
+		local direction = if objects.KeyCode == Enum.KeyCode.E then 1 else -1
+		self.PreviewIndex = (self.PreviewIndex - 1 + direction) % #objects + 1
+		self:PreparePreviewModel(objects[self.PreviewIndex])
+	end
+end
+
 function ClientPlacer:Destroy()  
 	if self.Preview then
 		self.Preview:Destroy()
 	end
 	RunService:UnbindFromRenderStep(PREVIEW_RENDER)
+	ContextActionService:UnbindAction(ROTATE_ACTION)
 	ContextActionService:UnbindAction(PLACE_ACTION)
+	ContextActionService:UnbindAction(DELETE_ACTION)
+    ContextActionService:UnbindAction(CYCLE_ACTION)
 end
 
 return ClientPlacer
