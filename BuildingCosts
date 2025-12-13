@@ -1,0 +1,6 @@
+local BuildingCosts = {
+    ["Hut"]        = 5,    
+    ["Fire"]       = 3,
+}
+
+return BuildingCosts
