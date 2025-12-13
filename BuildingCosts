@@ -1,3 +1,5 @@
+--module script in rep storage
+
 local BuildingCosts = {
     ["Hut"]        = 5,    
     ["Fire"]       = 3,
