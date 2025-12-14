@@ -17,10 +17,15 @@ end
 function PlotManager.Place(player: Player, name: string, targetCF:CFrame)
 	local object = PlaceableObjects:FindFirstChild(name)
 	local plot = plots[player.UserId]
-
-	if not object or not plot then
+    local cost = BuildingCosts[name]
+    local goldValue = player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Gold")
+	if not object or not plot or not goldValue or not cost then
 		return false
 	end
+    if goldValue.Value < cost then
+     local owed = cost - goldValue.Value
+     return false, "Insufficient Gold! You need "owed" more Gold"
+
 	local objectSize = object:GetExtentsSize()
 	if not PlacementValidator.WithinBounds(plot, objectSize, targetCF) or not	
 		PlacementValidator.NotIntersectingObjects(plot, objectSize, targetCF)
@@ -28,6 +33,7 @@ function PlotManager.Place(player: Player, name: string, targetCF:CFrame)
 
 		return false
 	end
+    goldValue.Value = goldValue.Value - cost
 
 	local newObject = object:Clone()
 	newObject:PivotTo(targetCF)
